@@ -14,6 +14,7 @@ export interface NavSection {
 
 export const TOP_LINKS: NavLeaf[] = [
   { text: "Dashboard", href: `${BASE}/dashboard` },
+  { text: "Profiles", href: `${BASE}/profiles` },
   { text: "Hosted zones", href: `${BASE}/hostedzones` },
   { text: "Health checks", href: `${BASE}/healthchecks` },
 ];
