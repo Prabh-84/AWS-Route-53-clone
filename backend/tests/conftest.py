@@ -27,3 +27,14 @@ def client(db_session: Session) -> Iterator[TestClient]:
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
+
+
+@pytest.fixture()
+def auth_client(client: TestClient, db_session: Session) -> TestClient:
+    """A client already logged in as the seeded demo user."""
+    from app.seed import DEMO_EMAIL, DEMO_PASSWORD, seed_demo_user
+
+    seed_demo_user(db_session)
+    response = client.post("/api/v1/auth/login", json={"email": DEMO_EMAIL, "password": DEMO_PASSWORD})
+    assert response.status_code == 200
+    return client

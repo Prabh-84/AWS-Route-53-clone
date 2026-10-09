@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.errors import register_exception_handlers
-from app.routers import auth, health
+from app.routers import auth, health, hosted_zones
 
 API_PREFIX = "/api/v1"
 
@@ -20,6 +20,7 @@ def create_app() -> FastAPI:
     register_exception_handlers(app)
     app.include_router(health.router, prefix=API_PREFIX)
     app.include_router(auth.router, prefix=API_PREFIX)
+    app.include_router(hosted_zones.router, prefix=API_PREFIX)
     return app
 
 
