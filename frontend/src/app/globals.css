@@ -1,3 +1,11 @@
+/*
+ * White is the default theme. "only light" also opts the page out of browser-forced dark rendering
+ * (e.g. Chrome's Auto Dark Mode), so it only turns dark when the user picks dark in the app.
+ */
+:root {
+  color-scheme: only light;
+}
+
 html,
 body {
   margin: 0;
