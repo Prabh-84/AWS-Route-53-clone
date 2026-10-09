@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { colorBackgroundLayoutMain } from "@cloudscape-design/design-tokens";
 import "@cloudscape-design/global-styles/index.css";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
@@ -19,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <ThemeStyle />
       </head>
-      <body suppressHydrationWarning>
+      <body suppressHydrationWarning style={{ background: colorBackgroundLayoutMain }}>
         <script dangerouslySetInnerHTML={{ __html: applySavedModeScript }} />
         <Providers>{children}</Providers>
       </body>
