@@ -6,7 +6,7 @@ AWS Route 53 console clone. Graded mainly on how closely the UI/UX matches the r
 ## Stack (fixed, do not change)
 - frontend/: Next.js (App Router) + TypeScript + Cloudscape Design System (@cloudscape-design/components, @cloudscape-design/global-styles, @cloudscape-design/collection-hooks) + TanStack Query + React Hook Form + Zod
 - backend/: FastAPI + SQLAlchemy 2.0 + Alembic + Pydantic v2 + SQLite + dnspython + passlib[bcrypt]
-- Frontend calls backend only through a Next.js rewrite: /api/* -> BACKEND_URL/api/*, so cookies stay same-origin.
+- Frontend calls backend only through a same-origin proxy: /api/* -> BACKEND_URL/api/* (implemented in frontend/src/proxy.ts so BACKEND_URL is read at runtime), so cookies stay same-origin.
 
 ## UI rules
 - Use Cloudscape components for everything they cover (TopNavigation, AppLayout, SideNavigation, BreadcrumbGroup, Flashbar, Table, PropertyFilter, TextFilter, Pagination, CollectionPreferences, Modal, Form, FormField, Tiles, Container, Header, Tabs, Alert). Never hand-roll something Cloudscape provides.
