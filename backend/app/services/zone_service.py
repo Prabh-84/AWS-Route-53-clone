@@ -43,7 +43,7 @@ def _not_found(zone_id: str) -> AppError:
     return AppError("NoSuchHostedZone", f"No hosted zone found with ID: {zone_id}", 404)
 
 
-def _get_owned_zone(db: Session, owner_id: int, zone_id: str) -> HostedZone:
+def get_owned_zone(db: Session, owner_id: int, zone_id: str) -> HostedZone:
     zone = db.scalar(select(HostedZone).where(HostedZone.id == zone_id, HostedZone.user_id == owner_id))
     if zone is None:
         raise _not_found(zone_id)
@@ -151,11 +151,11 @@ def list_zones(
 
 
 def get_zone(db: Session, owner_id: int, zone_id: str) -> HostedZoneOut:
-    return _to_out(db, _get_owned_zone(db, owner_id, zone_id))
+    return _to_out(db, get_owned_zone(db, owner_id, zone_id))
 
 
 def update_zone(db: Session, owner_id: int, zone_id: str, data: HostedZoneUpdate) -> HostedZoneOut:
-    zone = _get_owned_zone(db, owner_id, zone_id)
+    zone = get_owned_zone(db, owner_id, zone_id)
     fields = data.model_fields_set
 
     if "vpcs" in fields and data.vpcs is not None:
@@ -172,7 +172,7 @@ def update_zone(db: Session, owner_id: int, zone_id: str, data: HostedZoneUpdate
 
 
 def delete_zone(db: Session, owner_id: int, zone_id: str) -> None:
-    zone = _get_owned_zone(db, owner_id, zone_id)
+    zone = get_owned_zone(db, owner_id, zone_id)
     user_records = db.scalar(
         select(func.count(Record.id)).where(Record.zone_id == zone.id, Record.is_system.is_(False))
     )
@@ -198,12 +198,12 @@ def bulk_delete_zones(db: Session, owner_id: int, ids: list[str]) -> BulkDeleteR
 
 
 def get_tags(db: Session, owner_id: int, zone_id: str) -> dict[str, str]:
-    zone = _get_owned_zone(db, owner_id, zone_id)
+    zone = get_owned_zone(db, owner_id, zone_id)
     return {tag.key: tag.value for tag in zone.tags}
 
 
 def set_tags(db: Session, owner_id: int, zone_id: str, tags: dict[str, str]) -> dict[str, str]:
-    zone = _get_owned_zone(db, owner_id, zone_id)
+    zone = get_owned_zone(db, owner_id, zone_id)
     zone.tags.clear()
     db.flush()  # delete old rows before inserting, so reused keys don't hit the unique constraint
     zone.tags.extend(ZoneTag(key=k, value=v) for k, v in tags.items())
