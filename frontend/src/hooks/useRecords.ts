@@ -2,7 +2,14 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, api } from "@/lib/api-client";
-import type { DnsRecord, PaginatedRecords, RecordBulkDeleteResult } from "@/lib/types";
+import type {
+  DnsRecord,
+  DnsRecordBatchResult,
+  DnsRecordCreate,
+  DnsRecordUpdate,
+  PaginatedRecords,
+  RecordBulkDeleteResult,
+} from "@/lib/types";
 import { zoneKeys } from "./useZones";
 
 export interface RecordListParams {
@@ -24,6 +31,34 @@ export function useRecordList(zoneId: string, params: RecordListParams) {
     queryKey: recordKeys.list(zoneId, params),
     queryFn: () => api.get<PaginatedRecords>(`/hostedzones/${zoneId}/records`, { ...params }),
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useRecord(zoneId: string, recordId: string) {
+  return useQuery({
+    queryKey: [...zoneKeys.all, "records", zoneId, "detail", recordId] as const,
+    queryFn: () => api.get<DnsRecord>(`/hostedzones/${zoneId}/records/${recordId}`),
+    retry: false,
+  });
+}
+
+/** Creates one record (single POST) or several atomically (batch POST); resolves to the created records. */
+export function useCreateRecords(zoneId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (records: DnsRecordCreate[]): Promise<DnsRecord[]> => {
+      if (records.length === 1) return [await api.post<DnsRecord>(`/hostedzones/${zoneId}/records`, records[0])];
+      return (await api.post<DnsRecordBatchResult>(`/hostedzones/${zoneId}/records`, { records })).records;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: zoneKeys.all }),
+  });
+}
+
+export function useUpdateRecord(zoneId: string, recordId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: DnsRecordUpdate) => api.put<DnsRecord>(`/hostedzones/${zoneId}/records/${recordId}`, body),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: zoneKeys.all }),
   });
 }
 
