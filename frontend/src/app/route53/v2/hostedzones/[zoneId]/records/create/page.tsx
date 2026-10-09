@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Alert from "@cloudscape-design/components/alert";
 import Spinner from "@cloudscape-design/components/spinner";
+import { ErrorAlert } from "@/components/common/ErrorAlert";
 import { usePageBreadcrumbs } from "@/components/shell/BreadcrumbProvider";
 import { useNotifications } from "@/components/shell/NotificationProvider";
 import { RecordForm } from "@/components/records/RecordForm";
@@ -33,9 +33,7 @@ export default function CreateRecordPage() {
 
   if (zone.error) {
     return (
-      <Alert type="error" header="Unable to load the hosted zone">
-        {zone.error instanceof ApiError ? zone.error.message : "Something went wrong. Please try again."}
-      </Alert>
+      <ErrorAlert error={zone.error} header="Unable to load the hosted zone" onRetry={() => void zone.refetch()} retrying={zone.isFetching} />
     );
   }
   if (!zone.data) return <Spinner size="large" />;

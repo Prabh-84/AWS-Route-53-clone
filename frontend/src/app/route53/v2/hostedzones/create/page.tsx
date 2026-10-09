@@ -52,6 +52,7 @@ export default function CreateHostedZonePage() {
   const commentLength = useWatch({ control, name: "comment" }).length;
 
   const onSubmit = handleSubmit(async (values) => {
+    if (createZone.isPending) return; // ignore a second submit (e.g. Enter key) while saving
     setError(null);
     try {
       const zone = await createZone.mutateAsync({

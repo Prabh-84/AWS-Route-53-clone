@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Alert from "@cloudscape-design/components/alert";
 import Box from "@cloudscape-design/components/box";
 import Button from "@cloudscape-design/components/button";
 import Container from "@cloudscape-design/components/container";
@@ -10,6 +9,7 @@ import Header from "@cloudscape-design/components/header";
 import Spinner from "@cloudscape-design/components/spinner";
 import SpaceBetween from "@cloudscape-design/components/space-between";
 import Tabs from "@cloudscape-design/components/tabs";
+import { ErrorAlert } from "@/components/common/ErrorAlert";
 import { ConfirmDeleteModal } from "@/components/common/ConfirmDeleteModal";
 import { InfoLink } from "@/components/common/InfoLink";
 import { usePageBreadcrumbs } from "@/components/shell/BreadcrumbProvider";
@@ -46,9 +46,12 @@ export default function ZoneDetailsPage() {
 
   if (zoneQuery.error) {
     return (
-      <Alert type="error" header="Unable to load the hosted zone">
-        {zoneQuery.error instanceof ApiError ? zoneQuery.error.message : "Something went wrong. Please try again."}
-      </Alert>
+      <ErrorAlert
+        error={zoneQuery.error}
+        header="Unable to load the hosted zone"
+        onRetry={() => void zoneQuery.refetch()}
+        retrying={zoneQuery.isFetching}
+      />
     );
   }
   if (!zone) return <Spinner size="large" />;

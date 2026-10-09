@@ -15,6 +15,7 @@ import Spinner from "@cloudscape-design/components/spinner";
 import SpaceBetween from "@cloudscape-design/components/space-between";
 import TagEditor, { type TagEditorProps } from "@cloudscape-design/components/tag-editor";
 import Textarea from "@cloudscape-design/components/textarea";
+import { ErrorAlert } from "@/components/common/ErrorAlert";
 import { InfoLink } from "@/components/common/InfoLink";
 import { usePageBreadcrumbs } from "@/components/shell/BreadcrumbProvider";
 import { useNotifications } from "@/components/shell/NotificationProvider";
@@ -51,6 +52,7 @@ function EditZoneForm({ zone, initialTags }: { zone: HostedZone; initialTags: Re
   const commentLength = useWatch({ control, name: "comment" }).length;
 
   const onSubmit = handleSubmit(async (values) => {
+    if (updateZone.isPending || setTags.isPending) return; // ignore a second submit (e.g. Enter key) while saving
     setError(null);
     if (!tagsValid) {
       setError("Fix the errors in the tags before saving.");
@@ -181,9 +183,15 @@ export default function EditHostedZonePage() {
   const failure = zone.error ?? tags.error;
   if (failure) {
     return (
-      <Alert type="error" header="Unable to load the hosted zone">
-        {failure instanceof ApiError ? failure.message : "Something went wrong. Please try again."}
-      </Alert>
+      <ErrorAlert
+        error={failure}
+        header="Unable to load the hosted zone"
+        onRetry={() => {
+          void zone.refetch();
+          void tags.refetch();
+        }}
+        retrying={zone.isFetching || tags.isFetching}
+      />
     );
   }
   if (!zone.data || !tags.data) return <Spinner size="large" />;

@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Alert from "@cloudscape-design/components/alert";
 import Button from "@cloudscape-design/components/button";
 import Container from "@cloudscape-design/components/container";
 import Header from "@cloudscape-design/components/header";
 import Spinner from "@cloudscape-design/components/spinner";
 import TagEditor, { type TagEditorProps } from "@cloudscape-design/components/tag-editor";
+import { ErrorAlert } from "@/components/common/ErrorAlert";
 import { useNotifications } from "@/components/shell/NotificationProvider";
 import { useSetZoneTags, useZoneTags } from "@/hooks/useZones";
 import { ApiError } from "@/lib/api-client";
@@ -66,11 +66,7 @@ function TagsEditor({ zoneId, zoneName, initialTags }: { zoneId: string; zoneNam
 export function ZoneTagsTab({ zoneId, zoneName }: { zoneId: string; zoneName: string }) {
   const tags = useZoneTags(zoneId);
   if (tags.error) {
-    return (
-      <Alert type="error" header="Unable to load tags">
-        {tags.error instanceof ApiError ? tags.error.message : "Something went wrong."}
-      </Alert>
-    );
+    return <ErrorAlert error={tags.error} header="Unable to load tags" onRetry={() => void tags.refetch()} retrying={tags.isFetching} />;
   }
   if (!tags.data) return <Spinner />;
   // Keyed by the saved tags so the editor resets after a successful save.

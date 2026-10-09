@@ -10,6 +10,7 @@ import Header from "@cloudscape-design/components/header";
 import KeyValuePairs from "@cloudscape-design/components/key-value-pairs";
 import Spinner from "@cloudscape-design/components/spinner";
 import SpaceBetween from "@cloudscape-design/components/space-between";
+import { ErrorAlert } from "@/components/common/ErrorAlert";
 import { usePageBreadcrumbs } from "@/components/shell/BreadcrumbProvider";
 import { useNotifications } from "@/components/shell/NotificationProvider";
 import { RecordForm } from "@/components/records/RecordForm";
@@ -44,13 +45,21 @@ export default function EditRecordPage() {
     const notFound = failure instanceof ApiError && failure.status === 404;
     return (
       <SpaceBetween size="m">
-        <Alert type={notFound ? "warning" : "error"} header={notFound ? "Record not found" : "Unable to load the record"}>
-          {notFound
-            ? "The record you are trying to edit doesn't exist. It may have been deleted."
-            : failure instanceof ApiError
-              ? failure.message
-              : "Something went wrong. Please try again."}
-        </Alert>
+        {notFound ? (
+          <Alert type="warning" header="Record not found">
+            The record you are trying to edit doesn&apos;t exist. It may have been deleted.
+          </Alert>
+        ) : (
+          <ErrorAlert
+            error={failure}
+            header="Unable to load the record"
+            onRetry={() => {
+              void zone.refetch();
+              void record.refetch();
+            }}
+            retrying={zone.isFetching || record.isFetching}
+          />
+        )}
         <div>
           <Button onClick={backToZone}>Back to hosted zone</Button>
         </div>

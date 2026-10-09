@@ -9,6 +9,7 @@ import Link from "@cloudscape-design/components/link";
 import SpaceBetween from "@cloudscape-design/components/space-between";
 import type { TableProps } from "@cloudscape-design/components/table";
 import { ConfirmDeleteModal } from "@/components/common/ConfirmDeleteModal";
+import { ErrorAlert } from "@/components/common/ErrorAlert";
 import { ResourceTable } from "@/components/common/ResourceTable";
 import { usePageBreadcrumbs } from "@/components/shell/BreadcrumbProvider";
 import { useNotifications } from "@/components/shell/NotificationProvider";
@@ -71,7 +72,7 @@ export default function HostedZonesPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const search = useDebouncedValue(filteringText.trim(), 300);
 
-  const { data, isLoading, isFetching, error } = useZoneList({ search, page, page_size: pageSize, sort: "name" });
+  const { data, isLoading, isFetching, error, refetch } = useZoneList({ search, page, page_size: pageSize, sort: "name" });
   const deleteZones = useDeleteZones();
 
   const total = data?.total ?? 0;
@@ -111,9 +112,9 @@ export default function HostedZonesPage() {
   return (
     <>
       {error && (
-        <Box color="text-status-error" margin={{ bottom: "s" }}>
-          {error instanceof ApiError ? error.message : "Unable to load hosted zones."}
-        </Box>
+        <div style={{ marginBottom: 16 }}>
+          <ErrorAlert error={error} header="Unable to load hosted zones" onRetry={() => void refetch()} retrying={isFetching} />
+        </div>
       )}
       <ResourceTable
         columnDefinitions={columns}

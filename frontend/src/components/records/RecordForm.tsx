@@ -296,7 +296,10 @@ export function RecordForm({ mode, zoneId, zoneName, initialValues, submitting, 
   const { fields, append, remove } = useFieldArray({ control: methods.control, name: "records" });
   const isCreate = mode === "create";
 
-  const submit = methods.handleSubmit((values) => onSubmit(values.records));
+  const submit = methods.handleSubmit((values) => {
+    if (submitting) return; // ignore a second submit (e.g. Enter key) while saving
+    return onSubmit(values.records);
+  });
 
   return (
     <FormProvider {...methods}>

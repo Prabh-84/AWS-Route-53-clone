@@ -41,6 +41,7 @@ export default function SignInPage() {
   }, [user, router]);
 
   const onSubmit = handleSubmit(async ({ email, password }) => {
+    if (isSubmitting) return; // ignore a second submit while signing in
     setError(null);
     try {
       await login(email, password);

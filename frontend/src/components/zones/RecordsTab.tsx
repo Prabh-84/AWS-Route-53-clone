@@ -9,6 +9,7 @@ import SpaceBetween from "@cloudscape-design/components/space-between";
 import type { PropertyFilterProps } from "@cloudscape-design/components/property-filter";
 import type { TableProps } from "@cloudscape-design/components/table";
 import { ConfirmDeleteModal } from "@/components/common/ConfirmDeleteModal";
+import { ErrorAlert } from "@/components/common/ErrorAlert";
 import { ResourceTable } from "@/components/common/ResourceTable";
 import { useNotifications } from "@/components/shell/NotificationProvider";
 import { useDeleteRecords, useRecordList } from "@/hooks/useRecords";
@@ -96,7 +97,7 @@ export function RecordsTab({ zoneId }: { zoneId: string }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const filterParams = useMemo(() => queryToParams(query), [query]);
-  const { data, isLoading, error } = useRecordList(zoneId, { ...filterParams, page, page_size: pageSize });
+  const { data, isLoading, isFetching, error, refetch } = useRecordList(zoneId, { ...filterParams, page, page_size: pageSize });
   const deleteRecords = useDeleteRecords(zoneId);
 
   const total = data?.total ?? 0;
@@ -141,9 +142,9 @@ export function RecordsTab({ zoneId }: { zoneId: string }) {
   return (
     <>
       {error && (
-        <Box color="text-status-error" margin={{ bottom: "s" }}>
-          {error instanceof ApiError ? error.message : "Unable to load records."}
-        </Box>
+        <div style={{ marginBottom: 16 }}>
+          <ErrorAlert error={error} header="Unable to load records" onRetry={() => void refetch()} retrying={isFetching} />
+        </div>
       )}
       <ResourceTable
         columnDefinitions={columns}
