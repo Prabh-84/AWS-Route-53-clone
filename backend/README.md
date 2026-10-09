@@ -24,8 +24,14 @@ pytest
 
 ## Configuration
 
-Environment variables (or a `.env` file): `DATABASE_URL` (default `sqlite:///./data/route53.db`),
-`SESSION_TTL_HOURS` (default `8`), `CORS_ORIGINS` (default `["http://localhost:3000"]`).
+Environment variables (or a `.env` file; copy `.env.example`):
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | `sqlite:///./data/route53.db` | Database location |
+| `SESSION_TTL_HOURS` | `8` | Login session lifetime |
+| `COOKIE_SECURE` | `true` | Sets the `Secure` flag on the session cookie. Keep `true` in production (HTTPS); set `false` for local HTTP development |
+| `CORS_ORIGINS` | `["http://localhost:3000"]` | Allowed browser origins (only relevant if the API is called cross-origin) |
 
 ## Migrations
 

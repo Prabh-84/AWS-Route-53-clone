@@ -5,8 +5,15 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session, sessionmaker
 
 import app.models  # noqa: F401
+from app.core.config import settings
 from app.core.database import Base, build_engine, get_db
 from app.main import app
+
+
+@pytest.fixture(autouse=True)
+def insecure_cookies(monkeypatch):
+    """The test client talks plain HTTP and would never send a Secure cookie back, so default it off here."""
+    monkeypatch.setattr(settings, "COOKIE_SECURE", False)
 
 
 @pytest.fixture()

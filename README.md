@@ -52,6 +52,7 @@ python -m venv .venv
 pip install -r requirements.txt
 alembic upgrade head              # creates data/route53.db
 python -m app.seed                # demo user + sample zones/records (safe to re-run)
+set COOKIE_SECURE=false           # plain-HTTP local dev (macOS/Linux: export COOKIE_SECURE=false), or put it in backend/.env
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -64,6 +65,18 @@ npm run dev                       # http://localhost:3000
 ```
 
 The frontend forwards `/api/*` to `BACKEND_URL` (default `http://localhost:8000`, see `frontend/.env.example`).
+
+### Configuration
+
+Backend settings are environment variables (or `backend/.env`, see `backend/.env.example`); the frontend has one.
+
+| Variable | Service | Default | Purpose |
+| --- | --- | --- | --- |
+| `DATABASE_URL` | backend | `sqlite:///./data/route53.db` | Database location (`sqlite:////data/route53.db` in Docker) |
+| `SESSION_TTL_HOURS` | backend | `8` | Login session lifetime |
+| `COOKIE_SECURE` | backend | `true` | `Secure` flag on the session cookie. **Keep `true` in production (HTTPS).** Set `false` for plain-HTTP local development; `docker-compose.yml` already does |
+| `CORS_ORIGINS` | backend | `["http://localhost:3000"]` | Allowed origins if the API is called cross-origin (not needed through the proxy) |
+| `BACKEND_URL` | frontend | `http://localhost:8000` | Where the Next.js proxy forwards `/api/*`; read at runtime |
 
 ### Running the tests
 
@@ -178,7 +191,7 @@ Active on the hosted zones list and the records tab. They are ignored while you 
 - **The BIND parser covers common cases**, not the full RFC: the types above, `$ORIGIN`/`$TTL`, comments, multi-line
   parentheses and blank owners. `$INCLUDE`, `$GENERATE`, other record types and SOA/apex NS lines are skipped with a reason.
 - **Alias records** only offer a DNS name and a health toggle; the alias target's hosted zone ID is set to the current zone.
-- Mock authentication: no sign-up, password reset or roles; the session cookie is not `Secure` (plain HTTP).
+- Mock authentication: no sign-up, password reset or roles.
 - Resolver, DNS Firewall, traffic flow, domains, health checks and Application Recovery Controller pages are placeholders.
 - `change_log` exists in the schema but is not written to yet.
 

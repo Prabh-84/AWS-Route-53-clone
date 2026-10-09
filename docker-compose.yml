@@ -5,6 +5,8 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: sqlite:////data/route53.db
+      # This compose file serves plain HTTP on localhost; behind HTTPS leave the default (true).
+      COOKIE_SECURE: "false"
     volumes:
       - route53-data:/data
     healthcheck:

@@ -83,3 +83,26 @@ def test_seed_is_idempotent(db_session):
     second, created_second = seed_demo_user(db_session)
     assert created_first and not created_second
     assert first.id == second.id
+
+
+def test_cookie_secure_flag_follows_setting(client, demo_user, monkeypatch):
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "COOKIE_SECURE", True)
+    login = client.post("/api/v1/auth/login", json=LOGIN)
+    assert "secure" in login.headers["set-cookie"].lower()
+    logout = client.post("/api/v1/auth/logout")
+    assert "secure" in logout.headers["set-cookie"].lower()  # the clearing cookie matches the original attributes
+
+    monkeypatch.setattr(settings, "COOKIE_SECURE", False)
+    login = client.post("/api/v1/auth/login", json=LOGIN)
+    assert "secure" not in login.headers["set-cookie"].lower()
+
+
+def test_cookie_secure_defaults_to_true(monkeypatch):
+    from app.core.config import Settings
+
+    monkeypatch.delenv("COOKIE_SECURE", raising=False)
+    assert Settings(_env_file=None).COOKIE_SECURE is True
+    monkeypatch.setenv("COOKIE_SECURE", "false")
+    assert Settings(_env_file=None).COOKIE_SECURE is False

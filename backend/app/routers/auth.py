@@ -21,7 +21,7 @@ def login(body: LoginRequest, response: Response, db: DbSession = Depends(get_db
         max_age=settings.SESSION_TTL_HOURS * 3600,
         httponly=True,
         samesite="lax",
-        secure=False,  # TODO: enable behind HTTPS in production
+        secure=settings.COOKIE_SECURE,
         path="/",
     )
     return user
@@ -32,7 +32,7 @@ def logout(request: Request, response: Response, db: DbSession = Depends(get_db)
     token = request.cookies.get(SESSION_COOKIE)
     if token:
         auth_service.delete_session(db, token)
-    response.delete_cookie(SESSION_COOKIE, path="/")
+    response.delete_cookie(SESSION_COOKIE, path="/", secure=settings.COOKIE_SECURE, httponly=True, samesite="lax")
     return {"message": "Logged out"}
 
 
