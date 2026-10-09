@@ -5,10 +5,50 @@ import Box from "@cloudscape-design/components/box";
 import CollectionPreferences from "@cloudscape-design/components/collection-preferences";
 import Header from "@cloudscape-design/components/header";
 import Pagination from "@cloudscape-design/components/pagination";
+import PropertyFilter, { type PropertyFilterProps } from "@cloudscape-design/components/property-filter";
 import Table, { type TableProps } from "@cloudscape-design/components/table";
 import TextFilter from "@cloudscape-design/components/text-filter";
 import Button from "@cloudscape-design/components/button";
 import SpaceBetween from "@cloudscape-design/components/space-between";
+
+/** Use a PropertyFilter (key/operator/value tokens) instead of the plain text filter. */
+export interface PropertyFilterConfig {
+  query: PropertyFilterProps.Query;
+  onChange: (query: PropertyFilterProps.Query) => void;
+  filteringProperties: PropertyFilterProps.FilteringProperty[];
+  filteringOptions?: PropertyFilterProps.FilteringOption[];
+}
+
+const propertyFilterStrings: PropertyFilterProps.I18nStrings = {
+  filteringAriaLabel: "Filter records",
+  dismissAriaLabel: "Dismiss",
+  filteringPlaceholder: "Filter records by property or value",
+  groupValuesText: "Values",
+  groupPropertiesText: "Properties",
+  operatorsText: "Operators",
+  operationAndText: "and",
+  operationOrText: "or",
+  operatorLessText: "Less than",
+  operatorLessOrEqualText: "Less than or equal",
+  operatorGreaterText: "Greater than",
+  operatorGreaterOrEqualText: "Greater than or equal",
+  operatorContainsText: "Contains",
+  operatorDoesNotContainText: "Does not contain",
+  operatorEqualsText: "Equals",
+  operatorDoesNotEqualText: "Does not equal",
+  editTokenHeader: "Edit filter",
+  propertyText: "Property",
+  operatorText: "Operator",
+  valueText: "Value",
+  cancelActionText: "Cancel",
+  applyActionText: "Apply",
+  allPropertiesLabel: "All properties",
+  tokenLimitShowMore: "Show more",
+  tokenLimitShowFewer: "Show fewer",
+  clearFiltersText: "Clear filters",
+  removeTokenButtonAriaLabel: (token) => `Remove token ${token.propertyKey ?? ""} ${token.value}`,
+  enteredTextLabel: (text) => `Use: "${text}"`,
+};
 
 export interface ResourceTableProps<T> {
   columnDefinitions: TableProps.ColumnDefinition<T>[];
@@ -31,8 +71,12 @@ export interface ResourceTableProps<T> {
   resourceName: string;
   empty: { title: string; description?: string; action?: React.ReactNode };
   filteringPlaceholder: string;
-  filteringText: string;
-  onFilteringTextChange: (text: string) => void;
+  /** Plain text filter (used when no propertyFilter is given). */
+  filteringText?: string;
+  onFilteringTextChange?: (text: string) => void;
+  propertyFilter?: PropertyFilterConfig;
+  /** Rows for which this returns true get a disabled checkbox. */
+  isItemDisabled?: (item: T) => boolean;
 
   /** Total number of matching items on the server. */
   totalCount: number;
@@ -63,8 +107,10 @@ export function ResourceTable<T>({
   resourceName,
   empty,
   filteringPlaceholder,
-  filteringText,
+  filteringText = "",
   onFilteringTextChange,
+  propertyFilter,
+  isItemDisabled,
   totalCount,
   currentPage,
   onPageChange,
@@ -75,7 +121,11 @@ export function ResourceTable<T>({
   const { items: sortedItems, collectionProps } = useCollection(items, { sorting: {} });
   const pagesCount = Math.max(1, Math.ceil(totalCount / pageSize));
 
-  const emptyState = filteringText ? (
+  const isFiltered = propertyFilter ? propertyFilter.query.tokens.length > 0 : filteringText !== "";
+  const clearFilter = () =>
+    propertyFilter ? propertyFilter.onChange({ tokens: [], operation: "and" }) : onFilteringTextChange?.("");
+
+  const emptyState = isFiltered ? (
     <Box textAlign="center" color="inherit">
       <SpaceBetween size="xxs">
         <Box variant="strong" color="inherit">
@@ -84,7 +134,7 @@ export function ResourceTable<T>({
         <Box variant="p" color="inherit">
           We can&apos;t find a match.
         </Box>
-        <Button onClick={() => onFilteringTextChange("")}>Clear filter</Button>
+        <Button onClick={clearFilter}>Clear filter</Button>
       </SpaceBetween>
     </Box>
   ) : (
@@ -112,6 +162,7 @@ export function ResourceTable<T>({
       loading={loading}
       loadingText={`Loading ${resourceName}`}
       selectionType={selectionType}
+      isItemDisabled={isItemDisabled}
       selectedItems={selectedItems}
       onSelectionChange={({ detail }) => onSelectionChange?.(detail.selectedItems)}
       ariaLabels={{
@@ -125,13 +176,24 @@ export function ResourceTable<T>({
         </Header>
       }
       filter={
-        <TextFilter
-          filteringText={filteringText}
-          filteringPlaceholder={filteringPlaceholder}
-          filteringAriaLabel={`Filter ${resourceName}`}
-          onChange={({ detail }) => onFilteringTextChange(detail.filteringText)}
-          countText={undefined}
-        />
+        propertyFilter ? (
+          <PropertyFilter
+            query={propertyFilter.query}
+            onChange={({ detail }) => propertyFilter.onChange(detail)}
+            filteringProperties={propertyFilter.filteringProperties}
+            filteringOptions={propertyFilter.filteringOptions ?? []}
+            i18nStrings={{ ...propertyFilterStrings, filteringPlaceholder: filteringPlaceholder, filteringAriaLabel: `Filter ${resourceName}` }}
+            expandToViewport
+          />
+        ) : (
+          <TextFilter
+            filteringText={filteringText}
+            filteringPlaceholder={filteringPlaceholder}
+            filteringAriaLabel={`Filter ${resourceName}`}
+            onChange={({ detail }) => onFilteringTextChange?.(detail.filteringText)}
+            countText={undefined}
+          />
+        )
       }
       pagination={
         <Pagination

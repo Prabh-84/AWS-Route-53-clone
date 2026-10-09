@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Alert from "@cloudscape-design/components/alert";
 import Box from "@cloudscape-design/components/box";
 import Button from "@cloudscape-design/components/button";
 import FormField from "@cloudscape-design/components/form-field";
@@ -16,6 +17,8 @@ interface ConfirmDeleteModalProps {
   /** The word the user must type before the confirm button is enabled. */
   confirmWord?: string;
   loading?: boolean;
+  /** Failure message from the last attempt; shown in the dialog, which stays open. */
+  error?: string | null;
   onConfirm: () => void;
   onDismiss: () => void;
 }
@@ -31,6 +34,7 @@ function ConfirmDeleteDialog({
   names,
   confirmWord = "delete",
   loading,
+  error,
   onConfirm,
   onDismiss,
 }: ConfirmDeleteModalProps) {
@@ -60,6 +64,11 @@ function ConfirmDeleteDialog({
       }
     >
       <SpaceBetween size="m">
+        {error && (
+          <Alert type="error" header={`Failed to delete ${label}`}>
+            {error}
+          </Alert>
+        )}
         <Box>
           {plural ? `Are you sure you want to delete these ${names.length} ${label}?` : `Are you sure you want to delete the ${label}?`}
         </Box>
