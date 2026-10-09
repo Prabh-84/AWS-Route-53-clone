@@ -1,5 +1,6 @@
 import re
 
+from pydantic import ValidationError
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -15,6 +16,8 @@ from app.schemas.record import (
     RecordOut,
     RecordUpdate,
 )
+from app.schemas.zone_io import ImportPreview, ImportRecord, ImportSkip, ImportSummary
+from app.services import bind_io
 from app.services.record_validators import validate_values
 
 _LABEL = re.compile(r"^(\*|[a-z0-9_]([a-z0-9_-]{0,61}[a-z0-9_])?)$")
@@ -162,6 +165,11 @@ def list_records(
     )
 
 
+def all_records(db: Session, zone: HostedZone) -> list[Record]:
+    """Every record in the zone (used by export); queried fresh rather than via zone.records."""
+    return list(db.scalars(select(Record).where(Record.zone_id == zone.id)))
+
+
 def get_record(db: Session, zone: HostedZone, record_id: int) -> RecordOut:
     return RecordOut.model_validate(_get_record(db, zone, record_id))
 
@@ -202,3 +210,36 @@ def bulk_delete_records(db: Session, zone: HostedZone, ids: list[int]) -> Record
             db.rollback()
             result.failed.append(RecordBulkDeleteFailure(id=record_id, error=exc.message))
     return result
+
+
+def import_records(db: Session, zone: HostedZone, text: str, dry_run: bool) -> ImportPreview | ImportSummary:
+    """Import records from BIND zone file text (or a JSON export). Bad or conflicting records are skipped.
+
+    A failing record is rejected before anything is written, so no savepoints are needed: a dry run
+    does the real work and then rolls the transaction back, which makes its preview exact.
+    """
+    parsed = bind_io.parse_import(text, zone.name)
+    skipped = [ImportSkip(line=s.line, record=s.record, reason=s.reason) for s in parsed.skipped]
+    created: list[ImportRecord] = []
+
+    for item in parsed.records:
+        label = f"{item.name} {item.type}"
+        try:
+            data = RecordCreate(name=item.name, type=item.type, ttl=item.ttl, values=item.values, **item.extra)
+        except ValidationError as exc:
+            message = "; ".join(err["msg"].removeprefix("Value error, ") for err in exc.errors())
+            skipped.append(ImportSkip(line=item.line, record=label, reason=message))
+            continue
+        try:
+            record = _add(db, zone, data)
+        except AppError as exc:
+            skipped.append(ImportSkip(line=item.line, record=label, reason=exc.message))
+            continue
+        created.append(ImportRecord(name=record.name, type=record.type, ttl=record.ttl, values=record.values))
+
+    skipped.sort(key=lambda s: (s.line is None, s.line or 0))
+    if dry_run:
+        db.rollback()
+        return ImportPreview(would_create=created, would_skip=skipped)
+    db.commit()
+    return ImportSummary(created=created, skipped=skipped)

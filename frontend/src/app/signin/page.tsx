@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { colorBackgroundLayoutMain } from "@cloudscape-design/design-tokens";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
@@ -58,7 +59,7 @@ export default function SignInPage() {
   });
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f2f3f3" }}>
+    <div style={{ minHeight: "100vh", background: colorBackgroundLayoutMain }}>
       <div style={{ background: "#232f3e", height: 56, display: "flex", alignItems: "center", padding: "0 20px" }}>
         <Image src="/aws-logo.svg" alt="AWS" width={60} height={36} priority />
       </div>

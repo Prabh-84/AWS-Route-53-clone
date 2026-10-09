@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "@cloudscape-design/components/link";
+import { colorBackgroundContainerContent, colorBorderDividerDefault, colorTextBodySecondary } from "@cloudscape-design/design-tokens";
 
 const barStyle: React.CSSProperties = {
   position: "fixed",
@@ -12,8 +13,8 @@ const barStyle: React.CSSProperties = {
   alignItems: "center",
   gap: 24,
   padding: "6px 20px",
-  background: "#fafafa",
-  borderTop: "1px solid #d5dbdb",
+  background: colorBackgroundContainerContent,
+  borderTop: `1px solid ${colorBorderDividerDefault}`,
   fontSize: 12,
 };
 
@@ -27,7 +28,7 @@ export function Footer() {
       <Link href="#" variant="primary" fontSize="body-s" onFollow={(e) => e.preventDefault()}>
         Feedback
       </Link>
-      <span style={{ marginLeft: "auto", color: "#545b64" }}>© 2026, Amazon Web Services, Inc. or its affiliates.</span>
+      <span style={{ marginLeft: "auto", color: colorTextBodySecondary }}>© 2026, Amazon Web Services, Inc. or its affiliates.</span>
       <Link href="#" variant="primary" fontSize="body-s" onFollow={(e) => e.preventDefault()}>
         Privacy
       </Link>

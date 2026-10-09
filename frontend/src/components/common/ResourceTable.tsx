@@ -176,7 +176,8 @@ export function ResourceTable<T>({
         </Header>
       }
       filter={
-        propertyFilter ? (
+        <div data-shortcut-search style={{ display: "contents" }}>
+        {propertyFilter ? (
           <PropertyFilter
             query={propertyFilter.query}
             onChange={({ detail }) => propertyFilter.onChange(detail)}
@@ -193,7 +194,8 @@ export function ResourceTable<T>({
             onChange={({ detail }) => onFilteringTextChange?.(detail.filteringText)}
             countText={undefined}
           />
-        )
+        )}
+        </div>
       }
       pagination={
         <Pagination

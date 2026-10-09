@@ -140,3 +140,29 @@ export interface RecordBulkDeleteResult {
   deleted: number[];
   failed: { id: number; error: string }[];
 }
+
+// --- Zone file import / export ----------------------------------------------
+export interface ImportRecord {
+  name: string;
+  type: string;
+  ttl: number | null;
+  values: string[];
+}
+
+export interface ImportSkip {
+  line: number | null;
+  record: string;
+  reason: string;
+}
+
+export interface ImportPreview {
+  dry_run: true;
+  would_create: ImportRecord[];
+  would_skip: ImportSkip[];
+}
+
+export interface ImportSummary {
+  dry_run: false;
+  created: ImportRecord[];
+  skipped: ImportSkip[];
+}

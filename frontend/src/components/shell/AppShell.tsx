@@ -11,6 +11,7 @@ import Input from "@cloudscape-design/components/input";
 import Spinner from "@cloudscape-design/components/spinner";
 import TopNavigation from "@cloudscape-design/components/top-navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { useColorMode } from "@/hooks/useColorMode";
 import { useFollow } from "@/hooks/useFollow";
 import { useBreadcrumbItems } from "./BreadcrumbProvider";
 import { Footer } from "./Footer";
@@ -18,6 +19,18 @@ import { SideNav } from "./SideNav";
 import { useNotifications } from "./NotificationProvider";
 
 const SEARCH_PLACEHOLDER = "Search for services, features, blogs, docs, and more [Option+S]";
+
+const sunIcon = (
+  <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+    <circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" strokeWidth="2" />
+    <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M3 13l1.4-1.4M11.6 4.4L13 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+  </svg>
+);
+const moonIcon = (
+  <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+    <path d="M13.5 9.5A6 6 0 0 1 6.5 2.5a6 6 0 1 0 7 7z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+  </svg>
+);
 
 const servicesButtonStyle: React.CSSProperties = {
   display: "flex",
@@ -39,6 +52,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const onFollow = useFollow();
   const { items: flashItems } = useNotifications();
   const breadcrumbs = useBreadcrumbItems();
+  const { mode, toggle } = useColorMode();
 
   useEffect(() => {
     if (!isLoading && !user) router.replace("/signin");
@@ -73,6 +87,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           }
           utilities={[
+            {
+              type: "button",
+              iconSvg: mode === "dark" ? sunIcon : moonIcon,
+              ariaLabel: mode === "dark" ? "Switch to light mode" : "Switch to dark mode",
+              title: mode === "dark" ? "Switch to light mode" : "Switch to dark mode",
+              onClick: toggle,
+            },
             { type: "button", iconName: "notification", ariaLabel: "Notifications", title: "Notifications" },
             { type: "button", iconName: "status-info", ariaLabel: "Help", title: "Help" },
             {

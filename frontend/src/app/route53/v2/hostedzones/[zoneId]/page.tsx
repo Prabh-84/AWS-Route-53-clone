@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Box from "@cloudscape-design/components/box";
 import Button from "@cloudscape-design/components/button";
+import ButtonDropdown from "@cloudscape-design/components/button-dropdown";
 import Container from "@cloudscape-design/components/container";
 import Header from "@cloudscape-design/components/header";
 import Spinner from "@cloudscape-design/components/spinner";
@@ -19,7 +20,7 @@ import { ZoneDetailsCard } from "@/components/zones/ZoneDetailsCard";
 import { ZoneTagsTab } from "@/components/zones/ZoneTagsTab";
 import { useZoneNameServers } from "@/hooks/useRecords";
 import { useDeleteZones, useZone } from "@/hooks/useZones";
-import { ApiError } from "@/lib/api-client";
+import { ApiError, downloadFile } from "@/lib/api-client";
 import { stripTrailingDot } from "@/lib/format";
 
 const BASE = "/route53/v2";
@@ -72,6 +73,18 @@ export default function ZoneDetailsPage() {
     }
   };
 
+  const handleExport = async (format: "json" | "bind") => {
+    try {
+      await downloadFile(`/hostedzones/${zoneId}/export`, { format });
+    } catch (e) {
+      notify({
+        type: "error",
+        header: "Failed to export hosted zone",
+        content: e instanceof ApiError ? e.message : "Something went wrong. Please try again.",
+      });
+    }
+  };
+
   const closeDelete = () => {
     setDeleteOpen(false);
     setDeleteError(null);
@@ -85,6 +98,16 @@ export default function ZoneDetailsPage() {
         actions={
           <SpaceBetween direction="horizontal" size="xs">
             <Button onClick={() => setDeleteOpen(true)}>Delete zone</Button>
+            <ButtonDropdown
+              items={[
+                { id: "json", text: "Export as JSON" },
+                { id: "bind", text: "Export as BIND format" },
+              ]}
+              onItemClick={({ detail }) => void handleExport(detail.id === "bind" ? "bind" : "json")}
+              ariaLabel="Export"
+            >
+              Export
+            </ButtonDropdown>
             <Button>Test record</Button>
             <Button>Configure query logging</Button>
           </SpaceBetween>

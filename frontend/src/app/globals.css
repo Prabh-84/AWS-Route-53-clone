@@ -3,7 +3,7 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  background: #f2f3f3;
+  background: var(--page-background, #f2f3f3);
   font-family: "Amazon Ember", "Helvetica Neue", Roboto, Arial, sans-serif;
 }
 
@@ -26,4 +26,13 @@ body {
 #top-nav [class*="awsui_search_"] {
   max-inline-size: 640px !important;
   flex: 1;
+}
+
+/* Dark mode: Cloudscape adds .awsui-dark-mode to <body>. */
+body.awsui-dark-mode {
+  --page-background: #0f1b2a;
+}
+html:has(body.awsui-dark-mode) {
+  background: #0f1b2a;
+  color-scheme: dark;
 }

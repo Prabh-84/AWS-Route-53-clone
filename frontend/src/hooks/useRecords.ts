@@ -7,6 +7,8 @@ import type {
   DnsRecordBatchResult,
   DnsRecordCreate,
   DnsRecordUpdate,
+  ImportPreview,
+  ImportSummary,
   PaginatedRecords,
   RecordBulkDeleteResult,
 } from "@/lib/types";
@@ -59,6 +61,18 @@ export function useUpdateRecord(zoneId: string, recordId: string) {
   return useMutation({
     mutationFn: (body: DnsRecordUpdate) => api.put<DnsRecord>(`/hostedzones/${zoneId}/records/${recordId}`, body),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: zoneKeys.all }),
+  });
+}
+
+/** Preview (dry run) or perform an import of zone file text into the zone. */
+export function useImportZoneFile(zoneId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ text, dryRun }: { text: string; dryRun: boolean }) =>
+      api.postText<ImportPreview | ImportSummary>(`/hostedzones/${zoneId}/import`, text, { dry_run: dryRun }),
+    onSuccess: (result) => {
+      if (!result.dry_run) return queryClient.invalidateQueries({ queryKey: zoneKeys.all });
+    },
   });
 }
 

@@ -12,7 +12,9 @@ import { ConfirmDeleteModal } from "@/components/common/ConfirmDeleteModal";
 import { ErrorAlert } from "@/components/common/ErrorAlert";
 import { ResourceTable } from "@/components/common/ResourceTable";
 import { useNotifications } from "@/components/shell/NotificationProvider";
+import { ImportZoneFileModal } from "@/components/records/ImportZoneFileModal";
 import { useDeleteRecords, useRecordList } from "@/hooks/useRecords";
+import { useShortcuts } from "@/hooks/useShortcuts";
 import { ApiError } from "@/lib/api-client";
 import { stripTrailingDot } from "@/lib/format";
 import type { DnsRecord } from "@/lib/types";
@@ -95,6 +97,7 @@ export function RecordsTab({ zoneId }: { zoneId: string }) {
   const [pageSize, setPageSize] = useState(10);
   const [selected, setSelected] = useState<DnsRecord[]>([]);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const filterParams = useMemo(() => queryToParams(query), [query]);
   const { data, isLoading, isFetching, error, refetch } = useRecordList(zoneId, { ...filterParams, page, page_size: pageSize });
@@ -103,6 +106,12 @@ export function RecordsTab({ zoneId }: { zoneId: string }) {
   const total = data?.total ?? 0;
   const hasSystemSelected = selected.some((record) => record.is_system);
   const only = selected.length === 1 && !hasSystemSelected ? selected[0] : null;
+  useShortcuts({
+    onCreate: () => router.push(`${BASE}/hostedzones/${zoneId}/records/create`),
+    onEdit: () => only && router.push(`${BASE}/hostedzones/${zoneId}/records/${only.id}/edit`),
+    onDelete: () => selected.length > 0 && !hasSystemSelected && setDeleteOpen(true),
+    onRefresh: () => void refetch(),
+  });
   const recordLabel = (record: DnsRecord) => `${stripTrailingDot(record.name)} (${record.type})`;
 
   const handleDelete = async () => {
@@ -168,7 +177,7 @@ export function RecordsTab({ zoneId }: { zoneId: string }) {
             <Button disabled={selected.length === 0 || hasSystemSelected} onClick={() => setDeleteOpen(true)}>
               Delete record
             </Button>
-            <Button disabled>Import zone file</Button>
+            <Button onClick={() => setImportOpen(true)}>Import zone file</Button>
             <Button variant="primary" onClick={() => router.push(`${BASE}/hostedzones/${zoneId}/records/create`)}>
               Create record
             </Button>
@@ -191,6 +200,7 @@ export function RecordsTab({ zoneId }: { zoneId: string }) {
           setPage(1);
         }}
       />
+      <ImportZoneFileModal visible={importOpen} zoneId={zoneId} onDismiss={() => setImportOpen(false)} />
       <ConfirmDeleteModal
         visible={deleteOpen}
         resourceLabel="record"

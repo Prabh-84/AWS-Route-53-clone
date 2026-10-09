@@ -15,6 +15,7 @@ import { usePageBreadcrumbs } from "@/components/shell/BreadcrumbProvider";
 import { useNotifications } from "@/components/shell/NotificationProvider";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useFollow } from "@/hooks/useFollow";
+import { useShortcuts } from "@/hooks/useShortcuts";
 import { useDeleteZones, useZoneList } from "@/hooks/useZones";
 import { ApiError } from "@/lib/api-client";
 import { stripTrailingDot } from "@/lib/format";
@@ -77,6 +78,13 @@ export default function HostedZonesPage() {
 
   const total = data?.total ?? 0;
   const only = selected.length === 1 ? selected[0] : null;
+
+  useShortcuts({
+    onCreate: () => router.push(`${BASE}/hostedzones/create`),
+    onEdit: () => only && router.push(`${BASE}/hostedzones/${only.id}/edit`),
+    onDelete: () => selected.length > 0 && setDeleteOpen(true),
+    onRefresh: () => void refetch(),
+  });
 
   const handleDelete = async () => {
     const zones = selected;

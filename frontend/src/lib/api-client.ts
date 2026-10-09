@@ -36,19 +36,33 @@ async function toApiError(response: Response): Promise<ApiError> {
   return new ApiError("UnknownError", response.statusText || "Unexpected error", response.status);
 }
 
-async function request<T>(method: string, path: string, options: { params?: Params; body?: unknown } = {}): Promise<T> {
+interface RequestOptions {
+  params?: Params;
+  body?: unknown;
+  /** Send this string as a text/plain body instead of JSON-encoding `body`. */
+  text?: string;
+}
+
+async function send(method: string, path: string, options: RequestOptions): Promise<Response> {
+  const isText = options.text !== undefined;
+  const hasBody = isText || options.body !== undefined;
   let response: Response;
   try {
     response = await fetch(buildUrl(path, options.params), {
       method,
       credentials: "include",
-      headers: options.body !== undefined ? { "Content-Type": "application/json" } : undefined,
-      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      headers: hasBody ? { "Content-Type": isText ? "text/plain" : "application/json" } : undefined,
+      body: isText ? options.text : options.body !== undefined ? JSON.stringify(options.body) : undefined,
     });
   } catch {
     throw new ApiError("NetworkError", "Unable to reach the server. Check your connection and try again.", 0);
   }
   if (!response.ok) throw await toApiError(response);
+  return response;
+}
+
+async function request<T>(method: string, path: string, options: RequestOptions = {}): Promise<T> {
+  const response = await send(method, path, options);
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
 }
@@ -56,7 +70,24 @@ async function request<T>(method: string, path: string, options: { params?: Para
 export const api = {
   get: <T>(path: string, params?: Params) => request<T>("GET", path, { params }),
   post: <T>(path: string, body?: unknown) => request<T>("POST", path, { body }),
+  /** POST a raw text body (e.g. a zone file) with optional query params. */
+  postText: <T>(path: string, text: string, params?: Params) => request<T>("POST", path, { text, params }),
   put: <T>(path: string, body?: unknown) => request<T>("PUT", path, { body }),
   patch: <T>(path: string, body?: unknown) => request<T>("PATCH", path, { body }),
   delete: <T = void>(path: string) => request<T>("DELETE", path),
 };
+
+/** Fetch a file from the API and hand it to the browser as a download (uses the server's filename). */
+export async function downloadFile(path: string, params?: Params): Promise<void> {
+  const response = await send("GET", path, { params });
+  const disposition = response.headers.get("Content-Disposition") ?? "";
+  const filename = /filename="?([^";]+)"?/.exec(disposition)?.[1] ?? "download";
+  const url = URL.createObjectURL(await response.blob());
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
