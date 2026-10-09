@@ -1,0 +1,29 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: #f2f3f3;
+  font-family: "Amazon Ember", "Helvetica Neue", Roboto, Arial, sans-serif;
+}
+
+/* Classic console: the active side-navigation item is bold orange. */
+[class*="awsui_link-active"] {
+  font-weight: 700;
+}
+
+/* Classic console: flat containers with a thin border and soft shadow. */
+[class*="awsui_container_"][class*="awsui_variant-default"],
+[class*="awsui_root_"][class*="awsui_variant-default"][class*="awsui_container"] {
+  box-shadow: 0 1px 1px 0 rgba(0, 28, 36, 0.3), 1px 1px 1px 0 rgba(0, 28, 36, 0.15),
+    -1px 1px 1px 0 rgba(0, 28, 36, 0.15);
+}
+
+/* Classic console: the top-bar search is wide and sits next to "Services" on the left. */
+#top-nav [class*="awsui_inputs_"] {
+  justify-content: flex-start !important;
+}
+#top-nav [class*="awsui_search_"] {
+  max-inline-size: 640px !important;
+  flex: 1;
+}
