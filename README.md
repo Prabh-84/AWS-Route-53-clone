@@ -23,15 +23,15 @@ The reference screenshots of the real console that the UI was built against are 
 
 ### Dashboard
 
-**[Add screenshot here]**
+![Dashboard](docs/screenshots/Dashboard.png)
 
 ### Hosted zones list
 
-**[Add screenshot here]**
+![Hosted zones list](docs/screenshots/hosted.png)
 
 ### Hosted zone records view
 
-**[Add screenshot here]**
+![Records view](docs/screenshots/hostedrecords.png)
 
 ## Quick start
 
